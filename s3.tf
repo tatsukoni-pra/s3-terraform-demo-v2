@@ -70,6 +70,14 @@ resource "aws_s3_bucket_request_payment_configuration" "tatsukoni_terraform_test
   payer  = "BucketOwner"
 }
 
+resource "aws_s3_bucket_public_access_block" "tatsukoni_terraform_test_v2" {
+  bucket                  = aws_s3_bucket.tatsukoni_terraform_test_v2.id
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
 ##########
 # tatsukoni-terraform-test-v3
 # デフォルトで作成した場合は、以下の設定になる。

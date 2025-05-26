@@ -22,3 +22,8 @@ import {
   to = aws_s3_bucket_request_payment_configuration.tatsukoni_terraform_test_v2
   id =  "tatsukoni-terraform-test-v2"
 }
+
+import {
+  to = aws_s3_bucket_public_access_block.tatsukoni_terraform_test_v2
+  id = "tatsukoni-terraform-test-v2"
+}
