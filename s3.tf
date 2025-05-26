@@ -94,7 +94,7 @@ resource "aws_s3_bucket" "tatsukoni_terraform_test_v3" {
 # tatsukoni-terraform-test-v4
 # デフォルトで作成した場合は、以下の設定になる。
 #
-# - パブリックアクセスをすべてブロック：オン
+# - パブリックアクセスをすべてブロック：オフ
 # - オブジェクト所有者：
 #  - ACL有効
 #  - オブジェクト所有者：オブジェクトライター
@@ -165,4 +165,51 @@ resource "aws_s3_bucket_public_access_block" "tatsukoni_terraform_test_v4" {
   block_public_policy     = false
   ignore_public_acls      = false
   restrict_public_buckets = false
+}
+
+##########
+# tatsukoni-terraform-test-v5
+# デフォルトで作成した場合は、以下の設定になる。
+#
+# - パブリックアクセスをすべてブロック：オフ
+# - バケットポリシーを設定
+##########
+resource "aws_s3_bucket" "tatsukoni_terraform_test_v5" {
+  bucket        = "tatsukoni-terraform-test-v5"
+  force_destroy = "true"
+
+  tags = {
+    Name        = "tatsukoni-terraform-test-v5"
+    Env         = "test"
+    Service     = "test"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "tatsukoni_terraform_test_v5" {
+  bucket                  = aws_s3_bucket.tatsukoni_terraform_test_v5.id
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_policy" "tatsukoni_terraform_test_v5" {
+  bucket = aws_s3_bucket.tatsukoni_terraform_test_v5.id
+  policy = <<EOF
+{
+    "Version": "2008-10-17",
+    "Id": "PolicyForCloudFrontPrivateContent",
+    "Statement": [
+        {
+            "Sid": "1",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity E2OT7O0UL6JNKN"
+            },
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::tatsukoni-terraform-test-v5/*"
+        }
+    ]
+}
+EOF
 }
