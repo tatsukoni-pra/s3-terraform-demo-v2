@@ -89,3 +89,80 @@ resource "aws_s3_bucket" "tatsukoni_terraform_test_v3" {
     Service     = "test"
   }
 }
+
+##########
+# tatsukoni-terraform-test-v4
+# デフォルトで作成した場合は、以下の設定になる。
+#
+# - パブリックアクセスをすべてブロック：オン
+# - オブジェクト所有者：
+#  - ACL有効
+#  - オブジェクト所有者：オブジェクトライター
+# - アクセスコントロールリスト
+#  - バケット所有者 (AWS アカウント)にフルコントロール
+#  - S3ログ配信グループに読み取りと書き込み
+##########
+resource "aws_s3_bucket" "tatsukoni_terraform_test_v4" {
+  bucket        = "tatsukoni-terraform-test-v4"
+  force_destroy = "true"
+
+  tags = {
+    Name        = "tatsukoni-terraform-test-v4"
+    Env         = "test"
+    Service     = "test"
+  }
+}
+
+# 以下を設定しないと、ACL有効にならず、アクセスコントロールリストの設定に失敗する
+# api error AccessControlListNotSupported: The bucket does not allow ACLs
+resource "aws_s3_bucket_ownership_controls" "tatsukoni_terraform_test_v4" {
+  bucket = aws_s3_bucket.tatsukoni_terraform_test_v4.id
+  rule {
+    object_ownership = "ObjectWriter"
+  }
+}
+
+resource "aws_s3_bucket_acl" "tatsukoni_terraform_test_v4" {
+  # 先に aws_s3_bucket_ownership_controls を設定しないと適用に失敗するため、depends_on の記述が必要
+  depends_on = [aws_s3_bucket_ownership_controls.tatsukoni_terraform_test_v4]
+
+  bucket = aws_s3_bucket.tatsukoni_terraform_test_v4.id
+  access_control_policy {
+    grant {
+      grantee {
+        type = "CanonicalUser"
+        id  = data.aws_canonical_user_id.current.id
+      }
+      permission = "FULL_CONTROL"
+    }
+
+    grant {
+      grantee {
+        type = "Group"
+        uri  = "http://acs.amazonaws.com/groups/s3/LogDelivery"
+      }
+      permission = "READ_ACP"
+    }
+
+    grant {
+      grantee {
+        type = "Group"
+        uri  = "http://acs.amazonaws.com/groups/s3/LogDelivery"
+      }
+      permission = "WRITE"
+    }
+
+    owner {
+      id = data.aws_canonical_user_id.current.id
+    }
+  }
+}
+
+# パブリックアクセスをすべてブロック：オフ に設定する
+resource "aws_s3_bucket_public_access_block" "tatsukoni_terraform_test_v4" {
+  bucket                  = aws_s3_bucket.tatsukoni_terraform_test_v4.id
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
