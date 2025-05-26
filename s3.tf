@@ -1,3 +1,8 @@
+data "aws_canonical_user_id" "current" {}
+
+##########
+# tatsukoni-terraform-test-v2
+##########
 resource "aws_s3_bucket" "tatsukoni_terraform_test_v2" {
   bucket        = "tatsukoni-terraform-test-v2"
   force_destroy = "true"
@@ -33,7 +38,7 @@ resource "aws_s3_bucket_acl" "tatsukoni_terraform_test_v2" {
     grant {
       grantee {
         type = "CanonicalUser"
-        id  = "cbea86dfe619ebd19c7a90fad03f93211138a1fa9ec10d04675ff46b262afb5b"
+        id  = data.aws_canonical_user_id.current.id
       }
       permission = "FULL_CONTROL"
     }
@@ -55,7 +60,7 @@ resource "aws_s3_bucket_acl" "tatsukoni_terraform_test_v2" {
     }
 
     owner {
-      id = "cbea86dfe619ebd19c7a90fad03f93211138a1fa9ec10d04675ff46b262afb5b"
+      id = data.aws_canonical_user_id.current.id
     }
   }
 }
@@ -63,4 +68,24 @@ resource "aws_s3_bucket_acl" "tatsukoni_terraform_test_v2" {
 resource "aws_s3_bucket_request_payment_configuration" "tatsukoni_terraform_test_v2" {
   bucket = aws_s3_bucket.tatsukoni_terraform_test_v2.id
   payer  = "BucketOwner"
+}
+
+##########
+# tatsukoni-terraform-test-v3
+# デフォルトで作成した場合は、以下の設定になる。
+#
+# - パブリックアクセスをすべてブロック：オン
+# - オブジェクト所有者：
+#  - ACL無効
+#  - オブジェクト所有者：バケット所有者の強制
+##########
+resource "aws_s3_bucket" "tatsukoni_terraform_test_v3" {
+  bucket        = "tatsukoni-terraform-test-v3"
+  force_destroy = "true"
+
+  tags = {
+    Name        = "tatsukoni-terraform-test-v3"
+    Env         = "test"
+    Service     = "test"
+  }
 }
